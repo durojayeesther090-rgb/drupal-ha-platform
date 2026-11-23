@@ -1,0 +1,41 @@
+---
+# Shared storage: every server mounts the same EFS file system, so uploaded
+# files are instantly visible on all servers (no rsync needed).
+- name: Create EFS mount point
+  ansible.builtin.file:
+    path: "{{ efs_mount }}"
+    state: directory
+    mode: "0755"
+
+- name: Add EFS to /etc/fstab
+  ansible.builtin.lineinfile:
+    path: /etc/fstab
+    regexp: '^{{ efs_id }}\.efs'
+    line: "{{ efs_id }}.efs.{{ aws_region }}.amazonaws.com:/ {{ efs_mount }} nfs4 nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2,noresvport,_netdev 0 0"
+
+- name: Check if EFS is already mounted
+  ansible.builtin.command: mountpoint -q {{ efs_mount }}
+  register: efs_mounted
+  failed_when: false
+  changed_when: false
+
+- name: Mount EFS (retry while DNS and mount targets become ready)
+  ansible.builtin.command: mount {{ efs_mount }}
+  register: efs_mount_result
+  until: efs_mount_result.rc == 0
+  retries: 12
+  delay: 15
+  when: efs_mounted.rc != 0
+
+- name: Create shared Drupal directories on EFS
+  ansible.builtin.file:
+    path: "{{ efs_mount }}/{{ item }}"
+    state: directory
+    owner: www-data
+    group: www-data
+    mode: "0775"
+  loop:
+    - public
+    - private
+    - config
+    - config/sync

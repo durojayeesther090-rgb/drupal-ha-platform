@@ -1,0 +1,30 @@
+---
+# Metrics endpoints that Prometheus scrapes (monitoring phase).
+#   node exporter   -> port 9100 (CPU, memory, disk, network)
+#   apache exporter -> port 9117 (request rate, workers)
+- name: Install Prometheus exporters
+  ansible.builtin.apt:
+    name:
+      - prometheus-node-exporter
+      - prometheus-apache-exporter
+    state: present
+  ignore_errors: true
+
+- name: Point the Apache exporter at the local status page
+  ansible.builtin.lineinfile:
+    path: /etc/default/prometheus-apache-exporter
+    regexp: '^ARGS='
+    line: "ARGS='--scrape_uri=http://127.0.0.1:8081/server-status?auto'"
+    create: true
+    mode: "0644"
+  ignore_errors: true
+
+- name: Start the exporters
+  ansible.builtin.service:
+    name: "{{ item }}"
+    state: restarted
+    enabled: true
+  loop:
+    - prometheus-node-exporter
+    - prometheus-apache-exporter
+  ignore_errors: true

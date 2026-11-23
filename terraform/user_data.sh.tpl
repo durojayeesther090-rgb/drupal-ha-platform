@@ -4,6 +4,7 @@ set -euxo pipefail
 exec > >(tee /var/log/user-data.log) 2>&1
 
 export DEBIAN_FRONTEND=noninteractive
+export HOME=/root
 apt-get update -y
 apt-get install -y ansible git awscli
 

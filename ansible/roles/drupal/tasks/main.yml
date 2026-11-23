@@ -1,0 +1,126 @@
+---
+- name: Fetch application secrets from AWS Secrets Manager
+  ansible.builtin.command: >
+    aws secretsmanager get-secret-value
+    --secret-id {{ db_secret_arn }}
+    --region {{ aws_region }}
+    --query SecretString --output text
+  register: secret_raw
+  until: secret_raw.rc == 0
+  retries: 5
+  delay: 15
+  changed_when: false
+  no_log: true
+
+- name: Read secrets into a variable
+  ansible.builtin.set_fact:
+    app_secret: "{{ secret_raw.stdout | from_json }}"
+  no_log: true
+
+- name: Download Drupal with Composer (takes a few minutes)
+  ansible.builtin.command:
+    cmd: "composer create-project drupal/recommended-project:{{ drupal_version }} {{ drupal_dir }} --no-interaction --no-dev"
+    creates: "{{ drupal_dir }}/composer.json"
+  environment:
+    HOME: /root
+    COMPOSER_HOME: /root/.composer
+    COMPOSER_ALLOW_SUPERUSER: "1"
+    COMPOSER_MEMORY_LIMIT: "-1"
+
+- name: Install Drush (Drupal command line tool)
+  ansible.builtin.command:
+    cmd: composer require drush/drush --no-interaction
+    chdir: "{{ drupal_dir }}"
+    creates: "{{ drupal_dir }}/vendor/bin/drush"
+  environment:
+    HOME: /root
+    COMPOSER_HOME: /root/.composer
+    COMPOSER_ALLOW_SUPERUSER: "1"
+    COMPOSER_MEMORY_LIMIT: "-1"
+
+- name: Set ownership of the Drupal code
+  ansible.builtin.file:
+    path: "{{ drupal_dir }}"
+    owner: root
+    group: www-data
+    recurse: true
+  changed_when: false
+
+- name: Point the public files directory at shared EFS storage
+  ansible.builtin.file:
+    src: "{{ efs_mount }}/public"
+    dest: "{{ drupal_dir }}/web/sites/default/files"
+    state: link
+
+- name: Write settings.php (database, salt, shared paths)
+  ansible.builtin.template:
+    src: settings.php.j2
+    dest: "{{ drupal_dir }}/web/sites/default/settings.php"
+    owner: root
+    group: www-data
+    mode: "0440"
+  no_log: true
+
+# Only ONE server may run the installer. mkdir is atomic on NFS, so it works as a lock.
+- name: Check whether Drupal is already installed
+  ansible.builtin.stat:
+    path: "{{ efs_mount }}/.drupal-installed"
+  register: installed_marker
+
+- name: First-time installation
+  when: not installed_marker.stat.exists
+  block:
+    - name: Remove a stale install lock (older than 30 minutes)
+      ansible.builtin.command: find {{ efs_mount }}/.install-lock -maxdepth 0 -mmin +30 -exec rmdir {} ;
+      changed_when: false
+      failed_when: false
+
+    - name: Try to take the install lock
+      ansible.builtin.command: mkdir {{ efs_mount }}/.install-lock
+      register: install_lock
+      failed_when: false
+      changed_when: install_lock.rc == 0
+
+    - name: Run the Drupal installer on this server
+      when: install_lock.rc == 0
+      block:
+        - name: drush site:install
+          ansible.builtin.command: >
+            {{ drupal_dir }}/vendor/bin/drush --root={{ drupal_dir }}/web
+            site:install standard --yes
+            --site-name={{ drupal_site_name | quote }}
+            --account-name=admin
+            --account-pass={{ app_secret.admin_password }}
+            --account-mail={{ drupal_admin_email }}
+          become: true
+          become_user: www-data
+          no_log: true
+
+        - name: Mark Drupal as installed
+          ansible.builtin.file:
+            path: "{{ efs_mount }}/.drupal-installed"
+            state: touch
+            mode: "0644"
+      rescue:
+        - name: Release the lock so another server can try
+          ansible.builtin.file:
+            path: "{{ efs_mount }}/.install-lock"
+            state: absent
+        - name: Stop with a clear message
+          ansible.builtin.fail:
+            msg: "Drupal install failed. Check /var/log/user-data.log and try again."
+
+    - name: Wait for another server to finish the installation
+      when: install_lock.rc != 0
+      ansible.builtin.wait_for:
+        path: "{{ efs_mount }}/.drupal-installed"
+        timeout: 1500
+
+# Created LAST so the load balancer only sees this server as healthy when it is ready.
+- name: Install the load balancer health check page
+  ansible.builtin.template:
+    src: health.php.j2
+    dest: "{{ drupal_dir }}/web/health.php"
+    owner: root
+    group: www-data
+    mode: "0644"

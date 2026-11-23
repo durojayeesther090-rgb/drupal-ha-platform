@@ -1,0 +1,76 @@
+---
+- name: Install Apache, PHP and Composer
+  ansible.builtin.apt:
+    name:
+      - apache2
+      - libapache2-mod-php
+      - php
+      - php-cli
+      - php-mysql
+      - php-gd
+      - php-xml
+      - php-mbstring
+      - php-curl
+      - php-zip
+      - php-intl
+      - php-opcache
+      - composer
+    state: present
+
+- name: Enable Apache modules
+  ansible.builtin.command: "a2enmod {{ item }}"
+  args:
+    creates: "/etc/apache2/mods-enabled/{{ item }}.load"
+  loop:
+    - rewrite
+    - status
+    - headers
+  notify: Restart apache
+
+- name: Create empty document root for the status vhost
+  ansible.builtin.file:
+    path: /var/www/status
+    state: directory
+    mode: "0755"
+
+- name: Install PHP settings for Drupal
+  ansible.builtin.template:
+    src: php-drupal.ini.j2
+    dest: "/etc/php/{{ php_version }}/apache2/conf.d/99-drupal.ini"
+    mode: "0644"
+  notify: Restart apache
+
+- name: Install Drupal virtual host
+  ansible.builtin.template:
+    src: drupal.conf.j2
+    dest: /etc/apache2/sites-available/drupal.conf
+    mode: "0644"
+  notify: Restart apache
+
+- name: Install local-only status virtual host (for the Prometheus Apache exporter)
+  ansible.builtin.template:
+    src: status.conf.j2
+    dest: /etc/apache2/sites-available/status.conf
+    mode: "0644"
+  notify: Restart apache
+
+- name: Disable the default Apache site
+  ansible.builtin.command: a2dissite 000-default
+  args:
+    removes: /etc/apache2/sites-enabled/000-default.conf
+  notify: Restart apache
+
+- name: Enable Drupal and status sites
+  ansible.builtin.command: "a2ensite {{ item }}"
+  args:
+    creates: "/etc/apache2/sites-enabled/{{ item }}.conf"
+  loop:
+    - drupal
+    - status
+  notify: Restart apache
+
+- name: Make sure Apache is enabled and running
+  ansible.builtin.service:
+    name: apache2
+    state: started
+    enabled: true

@@ -1,0 +1,27 @@
+<?php
+// Managed by Ansible. Do not edit by hand.
+
+$databases['default']['default'] = [
+  'database' => '{{ app_secret.dbname }}',
+  'username' => '{{ app_secret.username }}',
+  'password' => '{{ app_secret.password }}',
+  'host' => '{{ app_secret.host }}',
+  'port' => '3306',
+  'driver' => 'mysql',
+  'prefix' => '',
+  'namespace' => 'Drupal\\mysql\\Driver\\Database\\mysql',
+  'autoload' => 'core/modules/mysql/src/Driver/Database/mysql/',
+];
+
+$settings['hash_salt'] = '{{ app_secret.hash_salt }}';
+$settings['config_sync_directory'] = '{{ efs_mount }}/config/sync';
+$settings['file_private_path'] = '{{ efs_mount }}/private';
+$settings['update_free_access'] = FALSE;
+
+// Only answer requests addressed to the load balancer's AWS name or localhost.
+// When you add your own domain name, add it here.
+$settings['trusted_host_patterns'] = [
+  '^.+\.elb\.amazonaws\.com$',
+  '^localhost$',
+  '^127\.0\.0\.1$',
+];

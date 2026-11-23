@@ -1,0 +1,7 @@
+<?php
+// Health check for the load balancer: healthy only when Drupal is installed
+// and the shared EFS storage is mounted.
+$ok = file_exists('{{ efs_mount }}/.drupal-installed');
+http_response_code($ok ? 200 : 503);
+header('Content-Type: text/plain');
+echo $ok ? "ok\n" : "not ready\n";

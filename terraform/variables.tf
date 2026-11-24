@@ -84,3 +84,15 @@ variable "allowed_cidr" {
   type        = string
   default     = "0.0.0.0/0"
 }
+
+variable "db_backup_retention_days" {
+  description = "RDS automated backup retention. AWS free-plan accounts allow 1 day maximum."
+  type        = number
+  default     = 7
+}
+
+variable "db_multi_az" {
+  description = "Run the RDS standby in a second Availability Zone"
+  type        = bool
+  default     = true
+}

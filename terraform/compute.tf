@@ -108,7 +108,7 @@ resource "aws_autoscaling_group" "app" {
   vpc_zone_identifier       = aws_subnet.app[*].id
   target_group_arns         = [aws_lb_target_group.app.arn]
   health_check_type         = "ELB"
-  health_check_grace_period = 600
+  health_check_grace_period = 1200
 
   launch_template {
     id      = aws_launch_template.app.id

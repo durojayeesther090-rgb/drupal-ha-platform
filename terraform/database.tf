@@ -48,9 +48,9 @@ resource "aws_db_instance" "main" {
   password                = random_password.db.result
   db_subnet_group_name    = aws_db_subnet_group.main.name
   vpc_security_group_ids  = [aws_security_group.db.id]
-  multi_az                = true
+  multi_az                = var.db_multi_az
   publicly_accessible     = false
-  backup_retention_period = 7
+  backup_retention_period = var.db_backup_retention_days
   backup_window           = "02:00-03:00"
   maintenance_window      = "sun:03:30-sun:04:30"
   deletion_protection     = false

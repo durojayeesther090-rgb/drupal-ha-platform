@@ -1,0 +1,11 @@
+# Needs the AWS EFS CSI driver add-on on the cluster.
+# Replace the file system id with the efs_id output from Terraform.
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: efs-sc
+provisioner: efs.csi.aws.com
+parameters:
+  provisioningMode: efs-ap
+  fileSystemId: fs-REPLACE_ME
+  directoryPerms: "777"

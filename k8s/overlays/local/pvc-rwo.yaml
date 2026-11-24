@@ -1,0 +1,8 @@
+# A one-node local cluster only offers ReadWriteOnce storage (all pods share one node anyway)
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: drupal-files
+spec:
+  accessModes:
+    - ReadWriteOnce

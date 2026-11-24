@@ -1,0 +1,28 @@
+# Create the secret by hand first (it is NOT stored in Git):
+#   kubectl -n drupal create secret generic drupal-secrets \
+#     --from-literal=DB_PASSWORD=... --from-literal=HASH_SALT=... --from-literal=DRUPAL_ADMIN_PASSWORD=...
+# Edit: ACCOUNT_ID below, REPLACE_WITH_RDS_ENDPOINT, and fs-REPLACE_ME in storageclass-efs.yaml
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: drupal
+resources:
+  - namespace.yaml
+  - ../../base
+  - storageclass-efs.yaml
+images:
+  - name: drupal-ha
+    newName: ACCOUNT_ID.dkr.ecr.eu-west-1.amazonaws.com/drupal-ha
+    newTag: latest
+patches:
+  - path: pvc-efs.yaml
+  - path: service-lb.yaml
+  - target:
+      kind: ConfigMap
+      name: drupal-config
+    patch: |-
+      - op: replace
+        path: /data/DB_HOST
+        value: REPLACE_WITH_RDS_ENDPOINT
+      - op: replace
+        path: /data/DB_USER
+        value: drupal_admin

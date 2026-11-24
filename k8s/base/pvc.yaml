@@ -1,0 +1,11 @@
+# Shared storage for uploaded files. Every Drupal pod mounts the same volume.
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: drupal-files
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 5Gi

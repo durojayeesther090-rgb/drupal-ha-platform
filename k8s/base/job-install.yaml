@@ -1,0 +1,27 @@
+# Runs the Drupal installer ONCE (not on every pod). Safe to re-run: it skips if already installed.
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: drupal-install
+spec:
+  backoffLimit: 4
+  template:
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: install
+          image: drupal-ha:latest
+          imagePullPolicy: IfNotPresent
+          args: ["install"]
+          envFrom:
+            - configMapRef:
+                name: drupal-config
+            - secretRef:
+                name: drupal-secrets
+          volumeMounts:
+            - name: files
+              mountPath: /opt/drupal/web/sites/default/files
+      volumes:
+        - name: files
+          persistentVolumeClaim:
+            claimName: drupal-files

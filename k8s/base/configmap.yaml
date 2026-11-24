@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: drupal-config
+data:
+  DB_HOST: mariadb
+  DB_PORT: "3306"
+  DB_NAME: drupal
+  DB_USER: drupal
+  TRUSTED_HOST_PATTERN: "^.+$"
+  DRUPAL_SITE_NAME: "Drupal HA Platform"

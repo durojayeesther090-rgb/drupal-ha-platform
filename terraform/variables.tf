@@ -96,3 +96,21 @@ variable "db_multi_az" {
   type        = bool
   default     = true
 }
+
+variable "github_repo" {
+  description = "GitHub repository allowed to deploy (owner/name)"
+  type        = string
+  default     = "durojayeesther090-rgb/drupal-ha-platform"
+}
+
+variable "enable_github_actions_role" {
+  description = "Create the IAM role GitHub Actions uses to deploy (needed once per AWS account)"
+  type        = bool
+  default     = false
+}
+
+variable "github_oidc_provider_exists" {
+  description = "Set true if this AWS account already has the GitHub OIDC identity provider"
+  type        = bool
+  default     = false
+}

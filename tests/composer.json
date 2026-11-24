@@ -1,0 +1,7 @@
+{
+  "name": "drupal-ha/tests",
+  "description": "Unit tests for the Drupal HA platform container settings",
+  "require-dev": {
+    "phpunit/phpunit": "^10.5"
+  }
+}

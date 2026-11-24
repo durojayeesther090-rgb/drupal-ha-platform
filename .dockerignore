@@ -3,6 +3,7 @@ terraform
 ansible
 k8s
 monitoring
+tests
 .github
 *.md
 *.zip

@@ -11,3 +11,6 @@ asg_desired   = 2
 db_backup_retention_days = 1
 
 ansible_repo_url = "https://github.com/durojayeesther090-rgb/drupal-ha-platform.git"
+
+# Lets the GitHub Actions pipeline deploy to this environment
+enable_github_actions_role = true

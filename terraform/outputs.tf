@@ -22,3 +22,8 @@ output "asg_name" {
 output "vpc_id" {
   value = aws_vpc.main.id
 }
+
+output "github_actions_role_arn" {
+  description = "Put this in the GitHub variable AWS_DEPLOY_ROLE_ARN"
+  value       = try(aws_iam_role.github_actions[0].arn, null)
+}

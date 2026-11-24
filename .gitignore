@@ -5,3 +5,7 @@ crash.log
 *.tfvars.secret
 .env
 __pycache__/
+tests/vendor/
+tests/.phpunit.cache/
+tests/vendor/
+tests/composer.lock

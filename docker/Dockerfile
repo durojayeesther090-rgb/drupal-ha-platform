@@ -15,7 +15,7 @@ RUN chmod +x /usr/local/bin/drupal-entrypoint.sh \
 
 ENV PATH="/opt/drupal/vendor/bin:${PATH}"
 
-HEALTHCHECK --interval=30s --timeout=5s --start-period=60s \
+HEALTHCHECK --interval=30s --timeout=5s --start-period=240s --retries=5 \
   CMD curl -fs http://localhost/health.php || exit 1
 
 ENTRYPOINT ["drupal-entrypoint.sh"]

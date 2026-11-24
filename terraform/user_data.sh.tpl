@@ -14,5 +14,5 @@ ansible-pull \
   --directory /opt/ansible-pull \
   --inventory localhost, \
   --connection local \
-  --extra-vars "aws_region=${region} db_secret_arn=${secret_arn} efs_id=${efs_id}" \
+  --extra-vars "aws_region=${region} db_secret_arn=${secret_arn} efs_id=${efs_id} log_prefix=${log_prefix}" \
   ansible/site.yml

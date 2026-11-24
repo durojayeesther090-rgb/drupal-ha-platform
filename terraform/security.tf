@@ -63,11 +63,12 @@ resource "aws_security_group" "db" {
   vpc_id      = aws_vpc.main.id
 
   ingress {
-    description     = "MySQL"
-    from_port       = 3306
-    to_port         = 3306
-    protocol        = "tcp"
-    security_groups = [aws_security_group.app.id]
+    description = "MySQL"
+    from_port   = 3306
+    to_port     = 3306
+    protocol    = "tcp"
+    # Drupal servers, plus the monitoring server so Prometheus can read database metrics
+    security_groups = concat([aws_security_group.app.id], aws_security_group.monitoring[*].id)
   }
 }
 

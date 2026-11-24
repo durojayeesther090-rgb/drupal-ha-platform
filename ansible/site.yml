@@ -1,6 +1,6 @@
 ---
 # Run on every server by ansible-pull (see terraform/user_data.sh.tpl).
-# aws_region, db_secret_arn and efs_id are passed in by Terraform as extra vars.
+# aws_region, db_secret_arn, efs_id and log_prefix are passed in by Terraform as extra vars.
 - name: Configure Drupal application server
   hosts: all
   become: true
@@ -12,3 +12,4 @@
     - webserver
     - drupal
     - exporters
+    - logging

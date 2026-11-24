@@ -13,6 +13,11 @@ resource "random_password" "hash_salt" {
   special = false
 }
 
+resource "random_password" "grafana_admin" {
+  length  = 20
+  special = false
+}
+
 resource "aws_secretsmanager_secret" "db" {
   name                    = "${local.name}/db-credentials"
   recovery_window_in_days = 0
@@ -21,12 +26,13 @@ resource "aws_secretsmanager_secret" "db" {
 resource "aws_secretsmanager_secret_version" "db" {
   secret_id = aws_secretsmanager_secret.db.id
   secret_string = jsonencode({
-    username       = var.db_username
-    password       = random_password.db.result
-    dbname         = var.db_name
-    host           = aws_db_instance.main.address
-    admin_password = random_password.drupal_admin.result
-    hash_salt      = random_password.hash_salt.result
+    username         = var.db_username
+    password         = random_password.db.result
+    dbname           = var.db_name
+    host             = aws_db_instance.main.address
+    admin_password   = random_password.drupal_admin.result
+    hash_salt        = random_password.hash_salt.result
+    grafana_password = random_password.grafana_admin.result
   })
 }
 

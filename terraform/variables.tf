@@ -109,6 +109,36 @@ variable "enable_github_actions_role" {
   default     = false
 }
 
+variable "enable_monitoring" {
+  description = "Create the Prometheus + Grafana server"
+  type        = bool
+  default     = true
+}
+
+variable "monitoring_instance_type" {
+  description = "EC2 type for the Prometheus + Grafana server"
+  type        = string
+  default     = "t3.small"
+}
+
+variable "monitoring_allowed_cidr" {
+  description = "Who may open Grafana (port 3000) and Prometheus (9090). Use your own address, e.g. 105.112.1.2/32."
+  type        = string
+  default     = "0.0.0.0/0"
+}
+
+variable "alert_email" {
+  description = "Email address for CloudWatch alarm notifications (leave empty to skip)"
+  type        = string
+  default     = ""
+}
+
+variable "log_retention_days" {
+  description = "How long CloudWatch keeps the logs"
+  type        = number
+  default     = 7
+}
+
 variable "github_oidc_provider_exists" {
   description = "Set true if this AWS account already has the GitHub OIDC identity provider"
   type        = bool

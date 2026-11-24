@@ -5,3 +5,5 @@ drupal_version: "^10"
 drupal_site_name: "Drupal HA Platform"
 drupal_admin_email: "admin@example.com"
 efs_mount: /mnt/efs
+# Where the CloudWatch agent sends logs (Terraform passes the real value as an extra var)
+log_prefix: /drupal-ha/staging

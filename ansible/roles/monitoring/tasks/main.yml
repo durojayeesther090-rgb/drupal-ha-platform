@@ -1,0 +1,140 @@
+---
+# Prometheus (collects numbers), Grafana (draws them), MySQL exporter (database numbers).
+# The configuration files live in the repository's monitoring/ folder so they can be read,
+# reviewed and reused without Ansible.
+- name: Install Prometheus and the MySQL exporter
+  ansible.builtin.apt:
+    name:
+      - prometheus
+      - prometheus-mysqld-exporter
+      - curl
+      - gnupg
+      - ca-certificates
+    update_cache: true
+    state: present
+
+- name: Create the folder for apt signing keys
+  ansible.builtin.file:
+    path: /etc/apt/keyrings
+    state: directory
+    mode: "0755"
+
+- name: Trust the Grafana package key
+  ansible.builtin.get_url:
+    url: https://apt.grafana.com/gpg.key
+    dest: /etc/apt/keyrings/grafana.asc
+    mode: "0644"
+
+- name: Add the Grafana package source
+  ansible.builtin.apt_repository:
+    repo: "deb [signed-by=/etc/apt/keyrings/grafana.asc] https://apt.grafana.com stable main"
+    filename: grafana
+    state: present
+
+- name: Install Grafana
+  ansible.builtin.apt:
+    name: grafana
+    update_cache: true
+    state: present
+
+# ---------------------------------------------------------------- passwords
+- name: Read the passwords from Secrets Manager
+  ansible.builtin.command: >
+    aws secretsmanager get-secret-value
+    --secret-id {{ db_secret_arn }}
+    --region {{ aws_region }}
+    --query SecretString --output text
+  register: secret_raw
+  changed_when: false
+  no_log: true
+
+- name: Keep the passwords in memory only
+  ansible.builtin.set_fact:
+    secret: "{{ secret_raw.stdout | from_json }}"
+  no_log: true
+
+# ---------------------------------------------------------------- database metrics
+- name: Give the MySQL exporter the database login
+  ansible.builtin.template:
+    src: mysqld.cnf.j2
+    dest: /etc/prometheus/mysqld.cnf
+    owner: root
+    group: prometheus
+    mode: "0640"
+  no_log: true
+  notify: Restart MySQL exporter
+
+- name: Point the MySQL exporter at that login
+  ansible.builtin.copy:
+    dest: /etc/default/prometheus-mysqld-exporter
+    content: |
+      ARGS='--config.my-cnf=/etc/prometheus/mysqld.cnf'
+    mode: "0644"
+  notify: Restart MySQL exporter
+
+# ---------------------------------------------------------------- Prometheus
+- name: Install the alert rules
+  ansible.builtin.copy:
+    src: "{{ playbook_dir }}/../monitoring/prometheus/rules/"
+    dest: /etc/prometheus/rules/
+    mode: "0644"
+  notify: Restart Prometheus
+
+- name: Install the Prometheus settings (checked with promtool before use)
+  ansible.builtin.template:
+    src: "{{ playbook_dir }}/../monitoring/prometheus/prometheus.yml.j2"
+    dest: /etc/prometheus/prometheus.yml
+    mode: "0644"
+    validate: promtool check config %s
+  notify: Restart Prometheus
+
+# ---------------------------------------------------------------- Grafana
+- name: Set the Grafana login
+  ansible.builtin.copy:
+    dest: /etc/default/grafana-server
+    content: |
+      GF_SECURITY_ADMIN_USER=admin
+      GF_SECURITY_ADMIN_PASSWORD={{ secret.grafana_password }}
+      GF_USERS_ALLOW_SIGN_UP=false
+      GF_AUTH_ANONYMOUS_ENABLED=false
+    owner: root
+    group: grafana
+    mode: "0640"
+  no_log: true
+  notify: Restart Grafana
+
+- name: Connect Grafana to Prometheus and CloudWatch
+  ansible.builtin.template:
+    src: "{{ playbook_dir }}/../monitoring/grafana/provisioning/datasources/datasources.yml.j2"
+    dest: /etc/grafana/provisioning/datasources/datasources.yml
+    mode: "0644"
+  notify: Restart Grafana
+
+- name: Tell Grafana where the dashboards are
+  ansible.builtin.copy:
+    src: "{{ playbook_dir }}/../monitoring/grafana/provisioning/dashboards/dashboards.yml"
+    dest: /etc/grafana/provisioning/dashboards/dashboards.yml
+    mode: "0644"
+  notify: Restart Grafana
+
+- name: Install the dashboards
+  ansible.builtin.copy:
+    src: "{{ playbook_dir }}/../monitoring/grafana/dashboards/"
+    dest: /var/lib/grafana/dashboards/
+    owner: grafana
+    group: grafana
+    mode: "0644"
+  notify: Restart Grafana
+
+- name: Start everything
+  ansible.builtin.service:
+    name: "{{ item }}"
+    state: started
+    enabled: true
+  loop:
+    - prometheus
+    - prometheus-mysqld-exporter
+    - grafana-server
+
+- name: Apply any changes now
+  ansible.builtin.meta: flush_handlers

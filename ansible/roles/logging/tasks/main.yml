@@ -1,0 +1,30 @@
+---
+# Ships Apache, system and bootstrap logs to CloudWatch Logs so every server's logs
+# are searchable in one place (CloudWatch > Log groups > {{ log_prefix }}/...).
+# A logging problem must never take the website down, so these tasks do not fail the run.
+- name: Download the CloudWatch agent
+  ansible.builtin.get_url:
+    url: https://s3.amazonaws.com/amazoncloudwatch-agent/ubuntu/amd64/latest/amazon-cloudwatch-agent.deb
+    dest: /tmp/amazon-cloudwatch-agent.deb
+    mode: "0644"
+  ignore_errors: true
+
+- name: Install the CloudWatch agent
+  ansible.builtin.apt:
+    deb: /tmp/amazon-cloudwatch-agent.deb
+  ignore_errors: true
+
+- name: Write the log collection settings
+  ansible.builtin.template:
+    src: cloudwatch-agent.json.j2
+    dest: /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json
+    mode: "0644"
+  ignore_errors: true
+
+- name: Start the agent with those settings
+  ansible.builtin.command: >
+    /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl
+    -a fetch-config -m ec2 -s
+    -c file:/opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json
+  changed_when: true
+  ignore_errors: true

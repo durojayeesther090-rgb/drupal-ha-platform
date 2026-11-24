@@ -1,0 +1,17 @@
+# Grafana data sources. The only template value is {{ aws_region }}.
+apiVersion: 1
+datasources:
+  - name: Prometheus
+    uid: prometheus
+    type: prometheus
+    access: proxy
+    url: http://localhost:9090
+    isDefault: true
+
+  # Load balancer and database numbers straight from AWS. Uses the server's IAM role: no keys stored.
+  - name: CloudWatch
+    uid: cloudwatch
+    type: cloudwatch
+    jsonData:
+      authType: default
+      defaultRegion: {{ aws_region }}

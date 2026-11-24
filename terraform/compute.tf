@@ -81,6 +81,7 @@ resource "aws_launch_template" "app" {
     efs_id      = aws_efs_file_system.drupal_files.id
     repo_url    = var.ansible_repo_url
     repo_branch = var.ansible_repo_branch
+    log_prefix  = local.log_prefix
   }))
 
   metadata_options {

@@ -45,7 +45,16 @@ jobs:
           pip install ansible-core
           cd ansible
           ansible-playbook --syntax-check -i localhost, site.yml \
-            -e "aws_region=eu-west-1 db_secret_arn=x efs_id=fs-1"
+            -e "aws_region=eu-west-1 db_secret_arn=x efs_id=fs-1 log_prefix=/drupal-ha/staging"
+          ansible-playbook --syntax-check -i localhost, monitoring.yml \
+            -e "aws_region=eu-west-1 db_secret_arn=x"
+
+      - name: Check monitoring files (alert rules and dashboards)
+        run: |
+          curl -sSL https://github.com/prometheus/prometheus/releases/download/v2.54.1/prometheus-2.54.1.linux-amd64.tar.gz \
+            | tar xz --strip-components=1 prometheus-2.54.1.linux-amd64/promtool
+          ./promtool check rules monitoring/prometheus/rules/*.yml
+          for f in monitoring/grafana/dashboards/*.json; do jq empty "$f" && echo "valid JSON: $f"; done
 
       - name: Lint the Dockerfile
         uses: hadolint/hadolint-action@v3.1.0

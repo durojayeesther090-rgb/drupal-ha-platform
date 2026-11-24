@@ -1,0 +1,55 @@
+# Prometheus settings. The only template value is {{ aws_region }}.
+# Drupal servers are found by their EC2 tag (Role=drupal), so servers added or replaced
+# by auto scaling are picked up automatically within a minute.
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+rule_files:
+  - /etc/prometheus/rules/*.yml
+
+scrape_configs:
+  - job_name: prometheus
+    static_configs:
+      - targets: ["localhost:9090"]
+
+  # CPU, memory, disk and network of every Drupal server
+  - job_name: node
+    ec2_sd_configs:
+      - region: {{ aws_region }}
+        port: 9100
+        refresh_interval: 60s
+        filters:
+          - name: tag:Role
+            values: [drupal]
+          - name: instance-state-name
+            values: [running]
+    relabel_configs:
+      - source_labels: [__meta_ec2_availability_zone]
+        target_label: az
+      - source_labels: [__meta_ec2_instance_id]
+        target_label: instance_id
+
+  # Apache web server: requests, busy and idle workers
+  - job_name: apache
+    ec2_sd_configs:
+      - region: {{ aws_region }}
+        port: 9117
+        refresh_interval: 60s
+        filters:
+          - name: tag:Role
+            values: [drupal]
+          - name: instance-state-name
+            values: [running]
+    relabel_configs:
+      - source_labels: [__meta_ec2_availability_zone]
+        target_label: az
+      - source_labels: [__meta_ec2_instance_id]
+        target_label: instance_id
+
+  # The RDS database, read through the MySQL exporter running on this server
+  - job_name: mysql
+    static_configs:
+      - targets: ["localhost:9104"]
+        labels:
+          database: drupal-rds

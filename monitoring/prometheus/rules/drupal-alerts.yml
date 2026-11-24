@@ -1,0 +1,88 @@
+# Alert rules. Open Prometheus > Alerts to see each rule and whether it is firing.
+groups:
+  - name: servers
+    rules:
+      - alert: ServerDown
+        expr: up{job="node"} == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Server {{ $labels.instance }} cannot be reached"
+          description: "Prometheus has not been able to scrape {{ $labels.instance }} for 2 minutes."
+
+      - alert: HighCPU
+        expr: 100 - (avg by (instance) (rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 80
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High CPU on {{ $labels.instance }}"
+          description: "CPU has been above 80% for 5 minutes (now {{ $value | printf \"%.0f\" }}%)."
+
+      - alert: HighMemory
+        expr: (1 - node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes) * 100 > 85
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High memory use on {{ $labels.instance }}"
+          description: "Memory use has been above 85% for 5 minutes (now {{ $value | printf \"%.0f\" }}%)."
+
+      - alert: DiskAlmostFull
+        expr: (1 - node_filesystem_avail_bytes{mountpoint="/",fstype!~"tmpfs|rootfs"} / node_filesystem_size_bytes{mountpoint="/",fstype!~"tmpfs|rootfs"}) * 100 > 85
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Disk almost full on {{ $labels.instance }}"
+          description: "The root disk is {{ $value | printf \"%.0f\" }}% full."
+
+  - name: webserver
+    rules:
+      - alert: ApacheDown
+        expr: apache_up == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Apache is not responding on {{ $labels.instance }}"
+          description: "The Apache exporter cannot read Apache's status page."
+
+      - alert: ApacheWorkersExhausted
+        expr: apache_workers{state="busy"} / (apache_workers{state="busy"} + apache_workers{state="idle"}) > 0.9
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Apache is almost out of workers on {{ $labels.instance }}"
+          description: "More than 90% of Apache workers have been busy for 5 minutes."
+
+  - name: database
+    rules:
+      - alert: DatabaseDown
+        expr: mysql_up == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Cannot connect to the database"
+          description: "The MySQL exporter has failed to connect to RDS for 1 minute."
+
+      - alert: DatabaseConnectionFailures
+        expr: rate(mysql_global_status_aborted_connects[5m]) > 0.1
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Database connections are failing"
+          description: "Failed connection attempts are running at {{ $value | printf \"%.2f\" }} per second."
+
+      - alert: DatabaseConnectionsHigh
+        expr: mysql_global_status_threads_connected / mysql_global_variables_max_connections * 100 > 80
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Database is using over 80% of its connections"
+          description: "Drupal servers may soon be refused new connections."

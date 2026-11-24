@@ -1,0 +1,10 @@
+---
+# Run on the monitoring server by ansible-pull (see terraform/user_data_monitoring.sh.tpl).
+# aws_region and db_secret_arn are passed in by Terraform as extra vars.
+- name: Configure Prometheus and Grafana monitoring server
+  hosts: all
+  become: true
+  vars_files:
+    - vars.yml
+  roles:
+    - monitoring

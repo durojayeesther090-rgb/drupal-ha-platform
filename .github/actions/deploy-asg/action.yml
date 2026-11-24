@@ -20,6 +20,15 @@ inputs:
 runs:
   using: composite
   steps:
+     - name: Debug - show the identity GitHub presents (claims only, not the token)
+      shell: bash
+      continue-on-error: true
+      run: |
+        token=$(curl -sS -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
+          "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=sts.amazonaws.com" | jq -r .value)
+        payload=$(echo "$token" | cut -d. -f2 | tr '_-' '/+')
+        while [ $(( ${#payload} % 4 )) -ne 0 ]; do payload="$payload="; done
+        echo "$payload" | base64 -d | jq '{iss, aud, sub, repository, environment}'
     - name: Log in to AWS (OIDC, no stored keys)
       uses: aws-actions/configure-aws-credentials@v4
       with:

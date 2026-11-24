@@ -39,12 +39,12 @@ resource "aws_iam_role" "github_actions" {
           "token.actions.githubusercontent.com:aud" = "sts.amazonaws.com"
         }
         StringLike = {
+          # GitHub now puts numeric IDs in the subject: owner@ID/repo@ID. Accept both forms.
           "token.actions.githubusercontent.com:sub" = [
             "repo:${var.github_repo}:environment:staging",
             "repo:${var.github_repo}:environment:production",
             "repo:${split("/", var.github_repo)[0]}@*/${split("/", var.github_repo)[1]}@*:environment:staging",
             "repo:${split("/", var.github_repo)[0]}@*/${split("/", var.github_repo)[1]}@*:environment:production",
-          ]
           ]
         }
       }

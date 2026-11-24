@@ -12,7 +12,7 @@ check() {
   local name="$1" path="$2" expect="${3:-}"
   local body code
   body="$(mktemp)"
-  code="$(curl -sL --retry 5 --retry-delay 5 --retry-connrefused --max-time 30 -o "$body" -w '%{http_code}' "$BASE$path" || true)"
+  code="$(curl -sL --retry 5 --retry-delay 5 --retry-all-errors --max-time 30 -o "$body" -w '%{http_code}' "$BASE$path" || true)"
   if [ "$code" != "200" ]; then
     echo "FAIL  $name ($path): HTTP $code"
     fail=1

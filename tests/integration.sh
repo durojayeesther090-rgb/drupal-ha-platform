@@ -30,7 +30,14 @@ pass "cron runs"
 # 5. Uploaded files survive a container restart (shared volume)
 drupal sh -c 'echo persisted > /opt/drupal/web/sites/default/files/ci-test.txt'
 docker compose restart drupal > /dev/null
-bash "$(dirname "$0")/smoke.sh" http://localhost:8080 > /dev/null
+# Wait for Apache to come back after the restart (up to about 90 seconds)
+for _ in $(seq 1 30); do
+  if curl -fs http://localhost:8080/health.php > /dev/null; then
+    break
+  fi
+  sleep 3
+done
+bash "$(dirname "$0")/smoke.sh" http://localhost:8080 || fail "site did not come back healthy after the restart"
 drupal test -f /opt/drupal/web/sites/default/files/ci-test.txt || fail "file was lost after restart"
 pass "files persist across a restart"
 

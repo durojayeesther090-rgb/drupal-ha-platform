@@ -44,6 +44,8 @@
             "uid": "cloudwatch"
           },
           "queryMode": "Metrics",
+          "metricQueryType": 0,
+          "metricEditorMode": 0,
           "namespace": "AWS/ApplicationELB",
           "metricName": "RequestCount",
           "statistic": "Sum",
@@ -102,6 +104,8 @@
             "uid": "cloudwatch"
           },
           "queryMode": "Metrics",
+          "metricQueryType": 0,
+          "metricEditorMode": 0,
           "namespace": "AWS/ApplicationELB",
           "metricName": "HTTPCode_Target_2XX_Count",
           "statistic": "Sum",
@@ -122,6 +126,8 @@
             "uid": "cloudwatch"
           },
           "queryMode": "Metrics",
+          "metricQueryType": 0,
+          "metricEditorMode": 0,
           "namespace": "AWS/ApplicationELB",
           "metricName": "HTTPCode_Target_4XX_Count",
           "statistic": "Sum",
@@ -142,6 +148,8 @@
             "uid": "cloudwatch"
           },
           "queryMode": "Metrics",
+          "metricQueryType": 0,
+          "metricEditorMode": 0,
           "namespace": "AWS/ApplicationELB",
           "metricName": "HTTPCode_Target_5XX_Count",
           "statistic": "Sum",
@@ -162,6 +170,8 @@
             "uid": "cloudwatch"
           },
           "queryMode": "Metrics",
+          "metricQueryType": 0,
+          "metricEditorMode": 0,
           "namespace": "AWS/ApplicationELB",
           "metricName": "HTTPCode_ELB_5XX_Count",
           "statistic": "Sum",
@@ -220,6 +230,8 @@
             "uid": "cloudwatch"
           },
           "queryMode": "Metrics",
+          "metricQueryType": 0,
+          "metricEditorMode": 0,
           "namespace": "AWS/ApplicationELB",
           "metricName": "TargetResponseTime",
           "statistic": "Average",
@@ -278,6 +290,8 @@
             "uid": "cloudwatch"
           },
           "queryMode": "Metrics",
+          "metricQueryType": 0,
+          "metricEditorMode": 0,
           "namespace": "AWS/ApplicationELB",
           "metricName": "HealthyHostCount",
           "statistic": "Minimum",
@@ -299,6 +313,8 @@
             "uid": "cloudwatch"
           },
           "queryMode": "Metrics",
+          "metricQueryType": 0,
+          "metricEditorMode": 0,
           "namespace": "AWS/ApplicationELB",
           "metricName": "UnHealthyHostCount",
           "statistic": "Maximum",
@@ -358,6 +374,8 @@
             "uid": "cloudwatch"
           },
           "queryMode": "Metrics",
+          "metricQueryType": 0,
+          "metricEditorMode": 0,
           "namespace": "AWS/ApplicationELB",
           "metricName": "ActiveConnectionCount",
           "statistic": "Sum",
@@ -416,6 +434,8 @@
             "uid": "cloudwatch"
           },
           "queryMode": "Metrics",
+          "metricQueryType": 0,
+          "metricEditorMode": 0,
           "namespace": "AWS/RDS",
           "metricName": "CPUUtilization",
           "statistic": "Average",
@@ -476,6 +496,8 @@
             "uid": "cloudwatch"
           },
           "queryMode": "Metrics",
+          "metricQueryType": 0,
+          "metricEditorMode": 0,
           "namespace": "AWS/RDS",
           "metricName": "DatabaseConnections",
           "statistic": "Maximum",
@@ -534,6 +556,8 @@
             "uid": "cloudwatch"
           },
           "queryMode": "Metrics",
+          "metricQueryType": 0,
+          "metricEditorMode": 0,
           "namespace": "AWS/RDS",
           "metricName": "FreeStorageSpace",
           "statistic": "Minimum",
@@ -592,6 +616,8 @@
             "uid": "cloudwatch"
           },
           "queryMode": "Metrics",
+          "metricQueryType": 0,
+          "metricEditorMode": 0,
           "namespace": "AWS/RDS",
           "metricName": "FreeableMemory",
           "statistic": "Minimum",
@@ -650,6 +676,8 @@
             "uid": "cloudwatch"
           },
           "queryMode": "Metrics",
+          "metricQueryType": 0,
+          "metricEditorMode": 0,
           "namespace": "AWS/RDS",
           "metricName": "ReadIOPS",
           "statistic": "Average",
@@ -670,6 +698,8 @@
             "uid": "cloudwatch"
           },
           "queryMode": "Metrics",
+          "metricQueryType": 0,
+          "metricEditorMode": 0,
           "namespace": "AWS/RDS",
           "metricName": "WriteIOPS",
           "statistic": "Average",

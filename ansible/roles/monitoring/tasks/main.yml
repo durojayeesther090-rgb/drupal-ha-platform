@@ -89,10 +89,12 @@
   notify: Restart Prometheus
 
 # ---------------------------------------------------------------- Grafana
+# Add to the package's settings file. Never replace it: it also holds Grafana's folder locations.
 - name: Set the Grafana login
-  ansible.builtin.copy:
-    dest: /etc/default/grafana-server
-    content: |
+  ansible.builtin.blockinfile:
+    path: /etc/default/grafana-server
+    marker: "# {mark} MANAGED BY ANSIBLE"
+    block: |
       GF_SECURITY_ADMIN_USER=admin
       GF_SECURITY_ADMIN_PASSWORD={{ secret.grafana_password }}
       GF_USERS_ALLOW_SIGN_UP=false
